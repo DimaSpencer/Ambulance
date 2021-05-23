@@ -10,7 +10,7 @@ namespace Ambulance
         public static int MinValue { get; set; } = 15;
         public static int MaxValue { get; set; } = 30;
 
-        private static readonly BindingList<Illness> _diseases = ListOfDiseases.GetAll();
+        private static readonly BindingList<Illness> _diseases = BaseObjectsInitializer.GetDefaultDiseases();
 
         public static Patient Generate()
         {

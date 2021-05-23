@@ -59,13 +59,13 @@ namespace Ambulance
         private void ButtonSetGroup_Click(object sender, EventArgs e)
         {
             var row = PatientsGridView.SelectedRows[0];
-
             if(row.DataBoundItem is Patient patient)
             {
                 if (_brigadeController.ChooseBrigadeForPatient(patient) == true)
                 {
                     _patientController.Patients.Remove(patient);
-                    PatientsGridView_SelectionChanged(null, null);
+                    if (_patientController.Patients.Count <= 0)
+                        ButtonSetGroup.Visible = false;
                 }
             }
         }

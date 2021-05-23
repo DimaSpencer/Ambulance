@@ -29,12 +29,11 @@ namespace Ambulance
 
         public Brigade GetSelectedBrigade()
         {
-            var selectedBrigade = BrigadesGridView.SelectedRows[0].DataBoundItem;
-
-            if (selectedBrigade is Brigade brigade)
+            var row = BrigadesGridView.SelectedRows[0];
+            if (row.DataBoundItem is Brigade brigade)
                 return brigade;
             else
-                throw new InvalidCastException("Ошибка преобразования типа Brigade");
+                throw new InvalidCastException($"{row.DataBoundItem.GetType()} is'nt a Brigade");
         }
 
     }

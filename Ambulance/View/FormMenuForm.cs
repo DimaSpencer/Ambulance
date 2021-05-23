@@ -16,8 +16,8 @@ namespace Ambulance
 
             InitializeComponent();
 
-            _brigageController.OnStatisticsChanged += BrigadeStatisticChange;
-            _patientController.OnStatisticsChanged += PatientsStatisticChange;
+            _brigageController.OnChangedCount += BrigadeStatisticChange;
+            _patientController.OnChangedCount += PatientsStatisticChange;
 
             (HighQBrigadesCured.Text, BrigadesCount.Text) = _brigageController.GetStatistics();
             NumberOfCalls.Text = _patientController.Patients.Count.ToString();

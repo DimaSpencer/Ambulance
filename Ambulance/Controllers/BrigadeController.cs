@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.Model;
@@ -15,19 +17,22 @@ namespace Ambulance.Controllers
         private int allBrigadesCount { get => Brigades.Count; }
 
         public BindingList<Brigade> Brigades { get; set; }
-        public Action<int, int> OnStatisticsChanged;
+        public Action<int, int> OnChangedCount;
+        public Action OnChangedStatusBrigade;
 
         private readonly FileManager<BindingList<Brigade>> _fileManager;
 
         public BrigadeController()
         {
-            OnStatisticsChanged = new Action<int, int>((int a, int b) => { });
+            OnChangedCount = new Action<int, int>((int a, int b) => { });
+            OnChangedStatusBrigade = new Action(()=> { });
 
+            bool isNewFile = !File.Exists(BRIGADES_FILEPATH);
             _fileManager = new FileManager<BindingList<Brigade>>(BRIGADES_FILEPATH);
             Brigades = _fileManager.LoadObjectFromFile();
 
-            if (Brigades.Count <= 0)
-                InitializeDefaultBrigades();
+            if (isNewFile)
+                Add(BaseObjectsInitializer.GetDefaultBrigades().ToArray());
         }
 
         public void CreateNewBrigade()
@@ -39,12 +44,10 @@ namespace Ambulance.Controllers
                 int lastId = Brigades[lastNumber].Id;
                 id = ++lastId;
             }
-            else
-                id = 1;
+            else id = 0;
 
             LowQualityBrigade brigade = new LowQualityBrigade(++id);
             Add(brigade);
-            MessageBox.Show($"Нову бригаду №{brigade.Id} створено", "Увага!", MessageBoxButtons.OK);
         }
 
         private void Add(params Brigade[] brigades)
@@ -53,7 +56,7 @@ namespace Ambulance.Controllers
                 Brigades.Add(brigade);
             _fileManager.UpdateFile(Brigades);
 
-            OnStatisticsChanged.Invoke(highQualityBrigadeCount, allBrigadesCount);
+            OnChangedCount.Invoke(highQualityBrigadeCount, allBrigadesCount);
         }
 
         public void Remove(Brigade brigade)
@@ -61,7 +64,7 @@ namespace Ambulance.Controllers
             Brigades.Remove(brigade);
             _fileManager.UpdateFile(Brigades);
 
-            OnStatisticsChanged.Invoke(highQualityBrigadeCount, allBrigadesCount);
+            OnChangedCount.Invoke(highQualityBrigadeCount, allBrigadesCount);
         }
 
         public bool ChooseBrigadeForPatient(Patient patient)
@@ -85,72 +88,66 @@ namespace Ambulance.Controllers
             if (formChoiceBrigade.ShowDialog() == DialogResult.OK)
             {
                 Brigade brigade = formChoiceBrigade.GetSelectedBrigade();
-
                 Task.Run(() => TakePatient(brigade, patient));
-
                 return true;
             }
             else
                 return false;
         }
 
-        public void RankUp(Brigade brigade)
-        {
-            if(brigade.Specialization == Specializations.Brigade && brigade.Status == Status.Free)
-            {
-                HighQualityBrigade highQualityBrigade = new HighQualityBrigade() {
-                    Id = brigade.Id,
-                    Status = brigade.Status,
-                    Patient = brigade.Patient,
-                    RecoveredPatients = brigade.RecoveredPatients
-                };
-
-                Brigades.Remove(brigade);
-                Brigades.Add(highQualityBrigade);
-
-                _fileManager.UpdateFile(Brigades);
-                MessageBox.Show($"Бригада була підвищена", "", MessageBoxButtons.OK);
-                OnStatisticsChanged.Invoke(highQualityBrigadeCount, allBrigadesCount);
-            }
-            else
-                MessageBox.Show($"Бригада вже максильного рангу", "Помилка!", MessageBoxButtons.OK);
-        }
-
         public async void TakePatient(Brigade brigade, Patient patient)
         {
+            string message;
             int waitingTime = Convert.ToInt32(patient.Distance * 100 / brigade.AverageDrivingSpeed);
-            MessageBox.Show($"Бригаду №{brigade.Id} було успішно відпрвлено до пацієнта: {patient} приблизний час прибуття {waitingTime} секунд","", MessageBoxButtons.OK);
+
+            brigade.Status = Status.OnTheWay;
+            OnChangedStatusBrigade.Invoke();
+
+            message = $"Бригаду №{brigade.Id} було успішно відпрвлено до пацієнта: {patient} приблизний час прибуття {waitingTime} секунд";
+            new Thread(() => MessageBox.Show(message, "", MessageBoxButtons.OK)).Start();
 
             await brigade.GoToPatientAsync(patient);
             _fileManager.UpdateFile(Brigades);
 
+            if(brigade.Specialization == Specializations.HighQualityBrigade)
+            {
+                message = $"Бригада №{brigade.Id} доставила пацієнта: {patient} до лікарні, вилікує приблизно через {patient.Illness.HealingTime} секунд";
+                new Thread(() => MessageBox.Show(message, "", MessageBoxButtons.OK)).Start();
+            }
+
+            brigade.Status = Status.HealsThePatient;
+            OnChangedStatusBrigade.Invoke();
+
             await brigade.HealAsync();
             _fileManager.UpdateFile(Brigades);
+            OnChangedStatusBrigade.Invoke();
+
+            message = $"Бригада №{brigade.Id} успішно вилікувала пацієнта {patient.FullName} від {patient.Illness.Name} і тепер вже доступна";
+            new Thread(() => MessageBox.Show(message, "", MessageBoxButtons.OK)).Start();
+        }
+
+        public void RankUp(LowQualityBrigade brigade)
+        {
+            HighQualityBrigade highQualityBrigade = new HighQualityBrigade()
+            {
+                Id = brigade.Id,
+                Status = brigade.Status,
+                Patient = brigade.Patient,
+                RecoveredPatients = brigade.RecoveredPatients
+            };
+
+            Brigades.Remove(brigade);
+            Brigades.Add(highQualityBrigade);
+
+            _fileManager.UpdateFile(Brigades);
+            OnChangedCount.Invoke(highQualityBrigadeCount, allBrigadesCount);
         }
 
         public BindingList<Brigade> GetBrigades(Specializations specialization)
         {
-            BindingList<Brigade> brigades = new BindingList<Brigade>(
-                Brigades.Where(
-                b => b.Specialization == specialization &&
-                     b.Status == Status.Free).ToList());
-
-            return brigades;
-        }
-
-        private void InitializeDefaultBrigades()
-        {
-            Brigade[] brigades = new Brigade[]
-            {
-                new HighQualityBrigade { Id = 1, Status = Status.Free },
-                new HighQualityBrigade { Id = 2, Status = Status.Free },
-                new HighQualityBrigade { Id = 3, Status = Status.Free },
-
-                new LowQualityBrigade { Id = 4, Status = Status.Free },
-                new LowQualityBrigade { Id = 5, Status = Status.Free },
-                new LowQualityBrigade { Id = 6, Status = Status.Free }
-            };
-            Add(brigades);
+            return (BindingList<Brigade>)Brigades.Where(b =>
+            b.Specialization == specialization &&
+            b.Status == Status.Free);
         }
 
         public (string, string) GetStatistics()

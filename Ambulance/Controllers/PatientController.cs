@@ -5,11 +5,11 @@ namespace Ambulance.Controllers
 {
     public class PatientController
     {
-        public Action<int> OnStatisticsChanged;
+        public Action<int> OnChangedCount;
         public BindingList<Patient> Patients { get; set; }
         public PatientController()
         {
-            OnStatisticsChanged = new Action<int>((int a) => { });
+            OnChangedCount = new Action<int>((int a) => { });
 
             Patients = new BindingList<Patient>()
             {
@@ -21,7 +21,7 @@ namespace Ambulance.Controllers
         {
             Patients.Add(PatientsGenerator.Generate());
             Console.Beep();
-            OnStatisticsChanged.Invoke(Patients.Count);
+            OnChangedCount.Invoke(Patients.Count);
         }
     }
 }
