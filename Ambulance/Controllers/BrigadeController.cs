@@ -12,20 +12,16 @@ namespace Ambulance.Controllers
     public class BrigadeController
     {
         private readonly string BRIGADES_FILEPATH = "brigades.xml";
-
-        private int highQualityBrigadeCount { get => Brigades.Where(b => b.Specialization == Specializations.HighQualityBrigade).Count(); }
-        private int allBrigadesCount { get => Brigades.Count; }
+        private readonly FileManager<BindingList<Brigade>> _fileManager;
 
         public BindingList<Brigade> Brigades { get; set; }
         public Action<int, int> OnChangedCount;
-        public Action OnChangedStatusBrigade;
-
-        private readonly FileManager<BindingList<Brigade>> _fileManager;
+        public Action OnChangedBrigadeStatus;
 
         public BrigadeController()
         {
             OnChangedCount = new Action<int, int>((int a, int b) => { });
-            OnChangedStatusBrigade = new Action(()=> { });
+            OnChangedBrigadeStatus = new Action(()=> { });
 
             bool isNewFile = !File.Exists(BRIGADES_FILEPATH);
             _fileManager = new FileManager<BindingList<Brigade>>(BRIGADES_FILEPATH);
@@ -97,33 +93,18 @@ namespace Ambulance.Controllers
 
         public async void TakePatient(Brigade brigade, Patient patient)
         {
-            string message;
-            int waitingTime = Convert.ToInt32(patient.Distance * 100 / brigade.AverageDrivingSpeed);
-
             brigade.Status = Status.OnTheWay;
-            OnChangedStatusBrigade.Invoke();
-
-            message = $"Бригаду №{brigade.Id} було успішно відпрвлено до пацієнта: {patient} приблизний час прибуття {waitingTime} секунд";
-            new Thread(() => MessageBox.Show(message, "", MessageBoxButtons.OK)).Start();
+            OnChangedBrigadeStatus.Invoke();
 
             await brigade.GoToPatientAsync(patient);
             _fileManager.UpdateFile(Brigades);
 
-            if(brigade.Specialization == Specializations.HighQualityBrigade)
-            {
-                message = $"Бригада №{brigade.Id} доставила пацієнта: {patient} до лікарні, вилікує приблизно через {patient.Illness.HealingTime} секунд";
-                new Thread(() => MessageBox.Show(message, "", MessageBoxButtons.OK)).Start();
-            }
-
             brigade.Status = Status.HealsThePatient;
-            OnChangedStatusBrigade.Invoke();
+            OnChangedBrigadeStatus.Invoke();
 
             await brigade.HealAsync();
             _fileManager.UpdateFile(Brigades);
-            OnChangedStatusBrigade.Invoke();
-
-            message = $"Бригада №{brigade.Id} успішно вилікувала пацієнта {patient.FullName} від {patient.Illness.Name} і тепер вже доступна";
-            new Thread(() => MessageBox.Show(message, "", MessageBoxButtons.OK)).Start();
+            OnChangedBrigadeStatus.Invoke();
         }
 
         public void RankUp(LowQualityBrigade brigade)
@@ -145,11 +126,13 @@ namespace Ambulance.Controllers
 
         public BindingList<Brigade> GetBrigades(Specializations specialization)
         {
-            return (BindingList<Brigade>)Brigades.Where(b =>
+            return new BindingList<Brigade>(Brigades.Where(b =>
             b.Specialization == specialization &&
-            b.Status == Status.Free);
+            b.Status == Status.Free).ToList());
         }
 
+        private int highQualityBrigadeCount { get => Brigades.Where(b => b.Specialization == Specializations.HighQualityBrigade).Count(); }
+        private int allBrigadesCount { get => Brigades.Count; }
         public (string, string) GetStatistics()
         {
             return (highQualityBrigadeCount.ToString(), allBrigadesCount.ToString());

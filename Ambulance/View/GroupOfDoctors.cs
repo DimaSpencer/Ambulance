@@ -15,7 +15,7 @@ namespace Ambulance
             InitializeComponent();
             BrigadesGridView.SelectionChanged += GridSelectionChanged;
             BrigadesGridView.DataSource = _brigageController.Brigades;
-            _brigageController.OnChangedStatusBrigade += UpdateGrid;
+            _brigageController.OnChangedBrigadeStatus += UpdateGrid;
             UpdateGrid();
         }
 
