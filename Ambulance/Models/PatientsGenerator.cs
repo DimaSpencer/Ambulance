@@ -34,7 +34,7 @@ namespace Ambulance
         private static Illness GenerateIllness()
         {
             Random random = new Random();
-            int randomValue = random.Next(0, _diseases.Count - 1);
+            int randomValue = random.Next(0, _diseases.Count);
             return _diseases[randomValue];
         }
 

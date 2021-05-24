@@ -6,7 +6,7 @@ using System.Windows.Forms;
 namespace Ambulance
 {
     [Serializable]
-    public class HighQualityBrigade : Brigade //додаємо спеціалізацію бригади
+    public class HighQualityBrigade : Brigade
     {
         public override Specializations Specialization { get; set; } = Specializations.HighQualityBrigade;
         public override double AverageDrivingSpeed { get; set; } = 100;
@@ -20,11 +20,12 @@ namespace Ambulance
 
             string message = $"Бригаду №{Id} було успішно відпрвлено до пацієнта: {patient} приблизний час прибуття {travelTime * 2} секунд";
             new Thread(() => MessageBox.Show(message, "", MessageBoxButtons.OK)).Start();
+            
+            Patient = patient;
 
             //емуляція подорожі до хворого
             await Task.Delay(travelTime * 1000);
 
-            Patient = patient;
 
             //емуляція подорожі назад
             await Task.Delay(travelTime * 1000);

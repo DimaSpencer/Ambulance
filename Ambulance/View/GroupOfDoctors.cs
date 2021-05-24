@@ -37,7 +37,7 @@ namespace Ambulance
                 ButtonRankUp.Visible = false;
                 if (MessageBox.Show($"Бригад немає, бажаєте створити нову бригаду?", "Увага", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    _brigageController.CreateNewBrigade();
+                    _brigageController.HireBrigade();
                     MessageBox.Show($"Нову бригаду створено", "Увага!", MessageBoxButtons.OK);
                 }
             }
@@ -70,7 +70,7 @@ namespace Ambulance
 
         private void ButtonCreateBrigade_Click(object sender, EventArgs e)
         {
-            _brigageController.CreateNewBrigade();
+            _brigageController.HireBrigade();
             MessageBox.Show($"Нову бригаду створено", "Увага!", MessageBoxButtons.OK);
         }
 

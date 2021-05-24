@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.Model;
@@ -31,7 +30,7 @@ namespace Ambulance.Controllers
                 Add(BaseObjectsInitializer.GetDefaultBrigades().ToArray());
         }
 
-        public void CreateNewBrigade()
+        public void HireBrigade()
         {
             int id;
             if (Brigades.Count > 0)
@@ -40,9 +39,9 @@ namespace Ambulance.Controllers
                 int lastId = Brigades[lastNumber].Id;
                 id = ++lastId;
             }
-            else id = 0;
+            else id = 1;
 
-            LowQualityBrigade brigade = new LowQualityBrigade(++id);
+            LowQualityBrigade brigade = new LowQualityBrigade(id);
             Add(brigade);
         }
 
@@ -52,7 +51,7 @@ namespace Ambulance.Controllers
                 Brigades.Add(brigade);
             _fileManager.UpdateFile(Brigades);
 
-            OnChangedCount.Invoke(highQualityBrigadeCount, allBrigadesCount);
+            OnChangedCount.Invoke(HighQualityBrigadeCount, AllBrigadesCount);
         }
 
         public void Remove(Brigade brigade)
@@ -60,7 +59,7 @@ namespace Ambulance.Controllers
             Brigades.Remove(brigade);
             _fileManager.UpdateFile(Brigades);
 
-            OnChangedCount.Invoke(highQualityBrigadeCount, allBrigadesCount);
+            OnChangedCount.Invoke(HighQualityBrigadeCount, AllBrigadesCount);
         }
 
         public bool ChooseBrigadeForPatient(Patient patient)
@@ -97,7 +96,6 @@ namespace Ambulance.Controllers
             OnChangedBrigadeStatus.Invoke();
 
             await brigade.GoToPatientAsync(patient);
-            _fileManager.UpdateFile(Brigades);
 
             brigade.Status = Status.HealsThePatient;
             OnChangedBrigadeStatus.Invoke();
@@ -117,11 +115,12 @@ namespace Ambulance.Controllers
                 RecoveredPatients = brigade.RecoveredPatients
             };
 
+            int index = Brigades.IndexOf(brigade);
             Brigades.Remove(brigade);
-            Brigades.Add(highQualityBrigade);
+            Brigades.Insert(index, highQualityBrigade);
 
             _fileManager.UpdateFile(Brigades);
-            OnChangedCount.Invoke(highQualityBrigadeCount, allBrigadesCount);
+            OnChangedCount.Invoke(HighQualityBrigadeCount, AllBrigadesCount);
         }
 
         public BindingList<Brigade> GetBrigades(Specializations specialization)
@@ -131,11 +130,11 @@ namespace Ambulance.Controllers
             b.Status == Status.Free).ToList());
         }
 
-        private int highQualityBrigadeCount { get => Brigades.Where(b => b.Specialization == Specializations.HighQualityBrigade).Count(); }
-        private int allBrigadesCount { get => Brigades.Count; }
+        private int HighQualityBrigadeCount { get => Brigades.Where(b => b.Specialization == Specializations.HighQualityBrigade).Count(); }
+        private int AllBrigadesCount { get => Brigades.Count; }
         public (string, string) GetStatistics()
         {
-            return (highQualityBrigadeCount.ToString(), allBrigadesCount.ToString());
+            return (HighQualityBrigadeCount.ToString(), AllBrigadesCount.ToString());
         }
     }
 }
