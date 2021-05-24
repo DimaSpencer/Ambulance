@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfBrigade xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Brigade xsi:type="HighQualityBrigade">
+    <Id>1</Id>
+    <Specialization>HighQualityBrigade</Specialization>
+    <Status>Free</Status>
+    <RecoveredPatients>3</RecoveredPatients>
+    <AverageDrivingSpeed>100</AverageDrivingSpeed>
+  </Brigade>
+  <Brigade xsi:type="HighQualityBrigade">
+    <Id>2</Id>
+    <Specialization>HighQualityBrigade</Specialization>
+    <Status>Free</Status>
+    <RecoveredPatients>2</RecoveredPatients>
+    <AverageDrivingSpeed>100</AverageDrivingSpeed>
+  </Brigade>
+  <Brigade xsi:type="HighQualityBrigade">
+    <Id>3</Id>
+    <Specialization>HighQualityBrigade</Specialization>
+    <Status>Free</Status>
+    <RecoveredPatients>2</RecoveredPatients>
+    <AverageDrivingSpeed>100</AverageDrivingSpeed>
+  </Brigade>
+  <Brigade xsi:type="LowQualityBrigade">
+    <Id>4</Id>
+    <Specialization>Brigade</Specialization>
+    <Status>Free</Status>
+    <RecoveredPatients>3</RecoveredPatients>
+    <AverageDrivingSpeed>70</AverageDrivingSpeed>
+  </Brigade>
+  <Brigade xsi:type="HighQualityBrigade">
+    <Id>5</Id>
+    <Specialization>HighQualityBrigade</Specialization>
+    <Status>Free</Status>
+    <RecoveredPatients>0</RecoveredPatients>
+    <AverageDrivingSpeed>100</AverageDrivingSpeed>
+  </Brigade>
+  <Brigade xsi:type="LowQualityBrigade">
+    <Id>6</Id>
+    <Specialization>Brigade</Specialization>
+    <Status>Free</Status>
+    <RecoveredPatients>1</RecoveredPatients>
+    <AverageDrivingSpeed>70</AverageDrivingSpeed>
+  </Brigade>
+</ArrayOfBrigade>
